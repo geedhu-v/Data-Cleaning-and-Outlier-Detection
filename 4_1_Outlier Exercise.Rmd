@@ -1,0 +1,151 @@
+---
+title: "Outlier Demonstration"
+author: "Peiyuan Zhou"
+date: "01/02/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width=5, fig.height=5,
+                      fig.path='Figs/', echo = TRUE)
+```
+
+This section is for the basic set up.
+It will clear all the plots, the console and the workspace.
+It also sets the overall format for numbers.
+
+```{r}
+if(!is.null(dev.list())) dev.off()
+cat("\014") 
+rm(list=ls())
+options(scipen=9)
+```
+This section loads and attaches all the necessary packages.
+
+```{r}
+#Load packages
+
+if(!require(readxl)){install.packages("readxl")}
+library("readxl")
+
+if(!require(pastecs)){install.packages("pastecs")}
+library("pastecs")
+
+if(!require(ggplot2)){install.packages("ggplot2")}
+library("ggplot2")
+
+if(!require(lattice)){install.packages("lattice")}
+library("lattice")
+
+if(!require(tinytex)){install.packages("tinytex")}
+library("tinytex")
+```
+
+### Read in Data
+
+```{r}
+df <- read_excel("Outlier_Example.xlsx")
+head(df)
+df
+```
+
+### Box Plots for 1.5 IQR
+```{r}
+#As for all numerical data, check Box Plots
+boxplot( mpg ~ cyl, data = mtcars,
+         xlab = "No of Gallons",
+         ylab = "Miles per Gallon",
+         main = "Milege Data",
+         notch = TRUE,
+         varwidth = TRUE,
+         col = c("green","yellow","purple"),
+         names = c("High","Medium","Low"))
+
+```
+ 
+### Box Plots for 1.5 IQR
+```{r}
+#As for all numerical data, check Box Plots
+boxplot(df$x1, horizontal=TRUE, pch=20)
+#quantile(df$x1)
+#a <- -0.62999-1.5*IQR(df$x1)
+#b <- 0.68780+1.5*IQR(df$x1)
+
+boxplot(df$x2, horizontal=TRUE, pch=20)
+boxplot(df$x3, horizontal=TRUE, pch=20)
+boxplot(df$x4, horizontal=TRUE, pch=20)
+boxplot(df$x5, horizontal=TRUE, pch=20)
+boxplot(df$x6, horizontal=TRUE, pch=20)
+boxplot(df$x8, horizontal=TRUE, pch=20)
+boxplot(df$x9, horizontal=TRUE, pch=20)
+
+#Adjusting the IQR (for fun)
+boxplot(df$x1, horizontal=TRUE, pch=20, range=2)
+boxplot(df$x2, horizontal=TRUE, pch=20, range=2)
+```
+ 
+### Density Plots for further details
+```{r}
+densityplot( ~ df$x6, pch=6)
+densityplot( ~ df$x2, pch=6)
+densityplot( ~ df$x3, pch=6)
+```
+ Clearly 
+ x2 has an anomolous value at ~ 10
+ x3 has an anomolous value at ~ -10
+ x6 has an odd value at ~ 0
+ 
+ 
+### Scatter-Plots can help spot "hidden" outliers
+```{r}
+densityplot( ~ df$x8, pch=6, main='x8 looks good')
+densityplot( ~ df$x9, pch=6, main='x9 looks good')
+plot(df$x8,df$x9, main='Hunting Hiding outliers',pch=20)
+```
+
+### Don't forget Factor/categorical Variables
+```{r}
+df$x7 <- as.factor(df$x7)
+barplot(table(df$x7), cex.names=.75,col='blue')
+#talbe(df$x7): counts the occurrences of each unique value in x7
+#cex.names: adjust the size of the axis labels (names) on the x-axis
+
+#install.packages("DescTools")
+#library(DescTools)
+#Freq(df$x7)
+```
+Clearly Shanghai is a contextual outlier
+
+## Code to Deal with outliers
+### delete the row
+```{r}
+densityplot( ~ df$x6, pch=6)
+nr <- which(df$x6 == 0)  #Find row number with x6 = 0
+df <- df[-c(nr),]
+densityplot( ~ df$x6, pch=6) # show the plot after removing the outlier.
+
+densityplot( ~ df$x2, pch=6)
+head(df[rev(order(df$x2)),],3)   #See the top three
+nr <- which(df$x2 == max(df$x2))  #Row number for max value 
+df <- df[-c(nr),]
+densityplot( ~ df$x2, pch=6)
+```
+### adjust the value
+```{r}
+head(df)
+densityplot( ~ df$x3, pch=6)
+df$x3 <- ifelse(df$x3 == min(df$x3),mean(df$x3),df$x3)  #Replaces min value with the mean
+densityplot( ~ df$x3, pch=6)
+```
+
+
+##### Correlation
+
+```{r}
+df <- dataset
+
+df[,-c(dataset$)]
+corr_mat <- round(cor(data),2) 
+head(corr_mat)
+```
+
